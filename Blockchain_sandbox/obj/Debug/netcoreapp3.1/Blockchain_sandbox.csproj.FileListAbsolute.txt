@@ -1,0 +1,11 @@
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\bin\Debug\netcoreapp3.1\Blockchain_sandbox.exe
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\bin\Debug\netcoreapp3.1\Blockchain_sandbox.deps.json
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\bin\Debug\netcoreapp3.1\Blockchain_sandbox.runtimeconfig.json
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\bin\Debug\netcoreapp3.1\Blockchain_sandbox.runtimeconfig.dev.json
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\bin\Debug\netcoreapp3.1\Blockchain_sandbox.dll
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\bin\Debug\netcoreapp3.1\Blockchain_sandbox.pdb
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\obj\Debug\netcoreapp3.1\Blockchain_sandbox.csprojAssemblyReference.cache
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\obj\Debug\netcoreapp3.1\Blockchain_sandbox.AssemblyInfoInputs.cache
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\obj\Debug\netcoreapp3.1\Blockchain_sandbox.AssemblyInfo.cs
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\obj\Debug\netcoreapp3.1\Blockchain_sandbox.dll
+C:\Users\kritz\Documents\Code_Projects\Blockchain_sandbox\Blockchain_sandbox\Blockchain_sandbox\obj\Debug\netcoreapp3.1\Blockchain_sandbox.pdb
