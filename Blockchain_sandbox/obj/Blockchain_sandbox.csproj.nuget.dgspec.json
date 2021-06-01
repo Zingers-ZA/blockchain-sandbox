@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\kritz\\Documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj": {}
+    "C:\\users\\kritz\\documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj": {}
   },
   "projects": {
-    "C:\\Users\\kritz\\Documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj": {
+    "C:\\users\\kritz\\documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\kritz\\Documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj",
+        "projectUniqueName": "C:\\users\\kritz\\documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj",
         "projectName": "Blockchain_sandbox",
-        "projectPath": "C:\\Users\\kritz\\Documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj",
+        "projectPath": "C:\\users\\kritz\\documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox.csproj",
         "packagesPath": "C:\\Users\\kritz\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\kritz\\Documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\obj\\",
+        "outputPath": "C:\\users\\kritz\\documents\\Code_Projects\\Blockchain_sandbox\\Blockchain_sandbox\\Blockchain_sandbox\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

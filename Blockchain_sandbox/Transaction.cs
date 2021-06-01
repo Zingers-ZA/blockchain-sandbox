@@ -18,5 +18,13 @@ namespace Blockchain_sandbox
             this.RecieverId = _ReciverId;
             this.SenderId = _SenderId;
         }
+
+        public String toString()
+        {
+            return "{ TransactionID: " + Id + ", " +
+                      "Amount: " + Amount.ToString() + ", " +
+                      "Sender: " + SenderId + ", " +
+                      "Reciever: " + RecieverId + " }";
+        }
     }
 }

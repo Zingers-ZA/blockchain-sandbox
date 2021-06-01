@@ -6,6 +6,7 @@ using Blockchain_sandbox.CustomEventArgs;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Blockchain_sandbox
 {
@@ -14,50 +15,99 @@ namespace Blockchain_sandbox
         public Guid Id { get; }
         public bool isMining { get; set; }
         public List<Block> blockChain { get; set; }
+        public Block latestBlock { get; set; }
         public int totalNodeCount { get; set; }
         public Consensus consensus { get; set; }
         public List<TransactionValidationObject> memPool { get; set; }
 
-        public event EventHandler blockSubmitted;
+        public int time { get; set; }/*TESTING*/
+        public bool bypassTime { get; set; }
 
-        public event EventHandler transactionSubmitted;
+        private System.Timers.Timer t { get; set; }
 
-        public event EventHandler transactionVoteSubmitted;
 
-        public event EventHandler blockVoteSubmitted;
+        public delegate void TransactionSubmittedEventHanlder(object sender, TransactionSubmittedEventArgs tArgs);
+        public event TransactionSubmittedEventHanlder transactionSubmitted;
 
-        public event EventHandler blockMined;
+        public delegate void TransactionVoteSubmittedEventHanlder(object sender, TransacionVoteEventArgs tArgs);
+        public event TransactionVoteSubmittedEventHanlder transactionVoteSubmitted;
 
-        public Node(List<Block> _blockChain, bool _isMining, int _totalNodeCount)
+        public delegate void BlockMinedEventHandler(object sender, BlockMinedEventArgs bArgs);
+        public event BlockMinedEventHandler blockMined;
+
+        public delegate void BlockSubmittedEventHandler(object sender, BlockSubmittedEventArgs bArgs);
+        public event BlockSubmittedEventHandler blockSubmitted;
+
+        public delegate void BlockVoteSubmittedEventHandler(object sender, BlockVoteEventArgs bArgs);
+        public event BlockVoteSubmittedEventHandler blockVoteSubmitted;
+
+
+        public Node(List<Block> _blockChain, bool _isMining, int _totalNodeCount, int time, bool bypasstime)
         {
             this.Id = Guid.NewGuid();
             this.isMining = _isMining;
             this.blockChain = _blockChain;
+            this.latestBlock = this.blockChain.Last();
             this.totalNodeCount = _totalNodeCount;
             this.consensus = new Consensus();
+            this.memPool = new List<TransactionValidationObject>();
+            this.bypassTime = bypasstime;
+
+            this.time = time;
+            /*          Random rnd = new Random();
+                        int time = rnd.Next(5,25);*/
+
+            this.t = new System.Timers.Timer(this.time * 1000);
+            t.Elapsed += createBlock;
+
+           
+            //this.Mine();
         }
 
         public void Mine()
         {
-            // is there a better way to run a timer? Not sure there are enough threads for this
-            Task.WaitAny(new Task(() => {
-                Random rnd = new Random();
-                int time = rnd.Next(50);
-                Thread.Sleep(time * 1000);
-            }));
-
-            createBlock();
+            this.consensus = new Consensus();
+            this.t.Start();
+            //reset timer here to a random time. 
         }
 
-        public void createBlock()
+        private void createBlock(object sender, ElapsedEventArgs e)
         {
+            Console.WriteLine($"Nounce Found. NodeID: {this.Id}");
             this.pruneMempool();
 
-            Block minedBlock = new Block(this.blockChain[-1].Hash, this.memPool.Select((t) => t.transaction).ToList());
+            Block minedBlock = new Block(this.latestBlock.Hash, this.memPool.Select((t) => t.transaction).ToList());
+            Console.WriteLine($"Block created: \n{minedBlock.toString()}");
+            
 
-            EventHandler handler = blockMined;
+            BlockMinedEventHandler handler = blockMined;
             BlockMinedEventArgs bArgs = new BlockMinedEventArgs(minedBlock);
+
+            receiveBlock(this, bArgs);
+
             handler?.Invoke(this, bArgs);
+            
+
+            //awaitConsensus();
+
+            //if (this.consensus.reached)
+            //{
+            //    Console.WriteLine($"Consensus Reached. Node: {this.Id}. Votes: a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
+
+            //    if (this.consensus.votesAccepted > this.consensus.votesRejected)
+            //    {
+            //        Console.WriteLine("Block accepted");
+            //        this.memPool.Clear();
+            //        this.blockChain.Add(minedBlock);
+            //        this.latestBlock = minedBlock;
+
+            //        Console.WriteLine($"Block added to chain. NodeID: {this.Id}");
+            //        //Mine();
+            //    }
+            //} else
+            //{
+            //    Console.WriteLine("Consensus Failed");
+            //}
         }
 
         public void receiveBlock(object sender, BlockMinedEventArgs bArgs)
@@ -78,13 +128,17 @@ namespace Blockchain_sandbox
                 {
                     this.memPool.Clear();
                     this.blockChain.Add(bArgs.block);
+                    this.latestBlock = bArgs.block;
+
+                    Console.WriteLine($"Block added to chain. NodeID: {this.Id}");
+                    //Mine();
                 }
             }
         }
 
         public void castBlockVote(bool accepted)
         {
-            EventHandler handler = blockVoteSubmitted;
+            BlockVoteSubmittedEventHandler handler = blockVoteSubmitted;
             BlockVoteEventArgs bArgs = new BlockVoteEventArgs(accepted);
             handler?.Invoke(this, bArgs);
         }
@@ -102,21 +156,24 @@ namespace Blockchain_sandbox
 
         public void awaitConsensus()
         {
-            for (int i = 0; i < 5; i++)
+            Console.WriteLine($"Node: {this.Id}. Waiting for consensus. a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
+            for (int i = 0; i < 100; i++)
             {
                 Thread.Sleep(50);
                 if ((this.consensus.votesAccepted + this.consensus.votesRejected - 1) == this.totalNodeCount)
                 {
                     this.consensus.reached = true;
+                    Console.WriteLine($"Node: {this.Id}. Accepted a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
                     return;
                 }
             }
+            Console.WriteLine($"Node: {this.Id}. Not accepted a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
         }
 
         public bool validateBlock(Block block)
         {
             
-            if (block.PrevHash != this.blockChain[-1].Hash)
+            if (block.PrevHash != this.latestBlock.Hash)
             {
                 return false;
             }
@@ -148,16 +205,16 @@ namespace Blockchain_sandbox
         {
             Transaction t = new Transaction(amount, RecieverId, this.Id);
 
-            EventHandler handler = transactionSubmitted;
-            TransactionEventArgs tArgs = new TransactionEventArgs(t);
+            TransactionSubmittedEventHanlder handler = transactionSubmitted;
+            TransactionSubmittedEventArgs tArgs = new TransactionSubmittedEventArgs(t);
             handler?.Invoke(this, tArgs);
         }
 
-        public void recieveTransaction(object sender, TransactionEventArgs tArgs)
+        public void recieveTransaction(object sender, TransactionSubmittedEventArgs tArgs)
         {
             this.memPool.Add(new TransactionValidationObject(tArgs.transaction));
 
-            EventHandler handler = transactionVoteSubmitted;
+            TransactionVoteSubmittedEventHanlder handler = transactionVoteSubmitted;
             TransacionVoteEventArgs vArgs;
 
             if (this.validateTransaction(tArgs.transaction))
@@ -220,44 +277,5 @@ namespace Blockchain_sandbox
             return false;
         }
 
-
-
-       /* public void submitBlock(Block b)
-        {
-            EventHandler handler = blockSubmitted;
-            BlockSubmittedEventArgs bArgs = new BlockSubmittedEventArgs();
-            handler?.Invoke(this, bArgs);
-        }
-
-         
-
-        public void validateBlock(Block b)
-        {
-            bool validHashes;
-            bool validTransactions;
-            bool valid;
-            
-
-            
-
-            if (b.Id == this.blockChain[-1].Id)
-            { // the latest block is being updated
-                if (b.PrevHash == this.blockChain[-2].Hash)
-                {
-
-                }
-
-            } else 
-            { // a new block has been created
-
-
-
-            }
-
-            for (int i = blockChain.Count-1; i > -1; i--)
-            {
-                
-            }
-        }*/
     }
 }

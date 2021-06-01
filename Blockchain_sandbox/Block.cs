@@ -18,7 +18,9 @@ namespace Blockchain_sandbox
         {
             this.Id = Guid.NewGuid();
             this.PrevHash = _PrevHash;
+            this.Transactions = _Transactions;
             this.TransactionCount = _Transactions.Count;
+            this.Hash = this.GetHashCode();
         }
 
         public void addTransaction(Transaction t)
@@ -29,6 +31,26 @@ namespace Blockchain_sandbox
             } else {
                 throw new FullBlockException();
             }
+        }
+
+        public String toString()
+        {
+
+            String output = "{ BlockID: " + Id + ", " + 
+                              "Hash: " + Hash.ToString() + ", " + 
+                              "PrevHash " + PrevHash.ToString() + ", " + 
+                              "Transactions: [ ";
+
+            String comma = "";
+            foreach (Transaction t in this.Transactions)
+            {
+                output += comma + "\n    " + t.toString();
+                comma = ",";
+            }
+
+            output += "\n]}";
+
+            return output;
         }
     }
 }
