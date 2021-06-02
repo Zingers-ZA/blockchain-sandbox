@@ -23,10 +23,12 @@ namespace Blockchain_sandbox
 
             List<Block> chain = new List<Block>(){ genisis };
 
-            Node n = new Node(chain, true, 2, 30, true);
+            Node n = new Node(chain, true, 2);
 
-            Node n2 = new Node(chain, true, 2, 10000000, false);
+            Node n2 = new Node(chain, true, 2);
 
+
+            // Node 1
             n.transactionSubmitted += n2.recieveTransaction;
 
             n2.transactionVoteSubmitted += n.receiveTransactionVote;
@@ -35,20 +37,20 @@ namespace Blockchain_sandbox
 
             n2.blockVoteSubmitted += n.receiveBlockVote;
 
+
+            //Node2
             n2.transactionSubmitted += n.recieveTransaction;
 
-            n.transactionVoteSubmitted += n.receiveTransactionVote;
+            n.transactionVoteSubmitted += n2.receiveTransactionVote;
 
             n2.blockMined += n.receiveBlock;
 
-            n.blockVoteSubmitted += n.receiveBlockVote;
+            n.blockVoteSubmitted += n2.receiveBlockVote;
 
             /*linkEvents(new List<Node>() { n, n2 });*/
 
             Console.WriteLine("Events linked");
-            Console.WriteLine("Mining...");
-
-            n.Mine();
+            Console.WriteLine("Mining...\n");
 
             Console.ReadLine();
             

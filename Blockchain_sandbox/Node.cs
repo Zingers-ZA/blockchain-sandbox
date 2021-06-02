@@ -20,9 +20,6 @@ namespace Blockchain_sandbox
         public Consensus consensus { get; set; }
         public List<TransactionValidationObject> memPool { get; set; }
 
-        public int time { get; set; }/*TESTING*/
-        public bool bypassTime { get; set; }
-
         private System.Timers.Timer t { get; set; }
 
 
@@ -42,7 +39,7 @@ namespace Blockchain_sandbox
         public event BlockVoteSubmittedEventHandler blockVoteSubmitted;
 
 
-        public Node(List<Block> _blockChain, bool _isMining, int _totalNodeCount, int time, bool bypasstime)
+        public Node(List<Block> _blockChain, bool _isMining, int _totalNodeCount)
         {
             this.Id = Guid.NewGuid();
             this.isMining = _isMining;
@@ -51,100 +48,104 @@ namespace Blockchain_sandbox
             this.totalNodeCount = _totalNodeCount;
             this.consensus = new Consensus();
             this.memPool = new List<TransactionValidationObject>();
-            this.bypassTime = bypasstime;
 
-            this.time = time;
-            /*          Random rnd = new Random();
-                        int time = rnd.Next(5,25);*/
-
-            this.t = new System.Timers.Timer(this.time * 1000);
+            this.t = new System.Timers.Timer();
             t.Elapsed += createBlock;
-
            
-            //this.Mine();
+            this.Mine();
         }
 
         public void Mine()
         {
             this.consensus = new Consensus();
+            if (t.Enabled)
+            {
+                t.Stop();
+            }
+
+            setInterval();
+           
             this.t.Start();
-            //reset timer here to a random time. 
+            Console.WriteLine($"Node-{this.Id}: Mining...");
+        }
+
+        public void setInterval()
+        {
+            Random rnd = new Random();
+            int time = rnd.Next(2, 25);
+            t.Interval = time*1000;
         }
 
         private void createBlock(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine($"Nounce Found. NodeID: {this.Id}");
+            Console.WriteLine($"Node-{this.Id}: Nounce Found");
             this.pruneMempool();
 
             Block minedBlock = new Block(this.latestBlock.Hash, this.memPool.Select((t) => t.transaction).ToList());
-            Console.WriteLine($"Block created: \n{minedBlock.toString()}");
+            Console.WriteLine($"Node-{this.Id}: Block created: \n{minedBlock.toString()}");
             
 
             BlockMinedEventHandler handler = blockMined;
             BlockMinedEventArgs bArgs = new BlockMinedEventArgs(minedBlock);
 
-            receiveBlock(this, bArgs);
+            castBlockVote(true, minedBlock);
+            this.consensus.votesAccepted++;
 
             handler?.Invoke(this, bArgs);
-            
 
-            //awaitConsensus();
+        }
 
-            //if (this.consensus.reached)
-            //{
-            //    Console.WriteLine($"Consensus Reached. Node: {this.Id}. Votes: a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
+        public void checkConsensus(Block block)
+        {
+            if (this.consensus.votesRejected + this.consensus.votesAccepted == this.totalNodeCount)
+            {
+                Console.WriteLine($"Node-{this.Id}: Consensus Reached. Votes: a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
 
-            //    if (this.consensus.votesAccepted > this.consensus.votesRejected)
-            //    {
-            //        Console.WriteLine("Block accepted");
-            //        this.memPool.Clear();
-            //        this.blockChain.Add(minedBlock);
-            //        this.latestBlock = minedBlock;
+                this.consensus.reached = true;
+                if (this.consensus.votesAccepted > this.consensus.votesRejected)
+                {
+                    this.memPool.Clear();
+                    this.blockChain.Add(block);
+                    this.latestBlock = block;
 
-            //        Console.WriteLine($"Block added to chain. NodeID: {this.Id}");
-            //        //Mine();
-            //    }
-            //} else
-            //{
-            //    Console.WriteLine("Consensus Failed");
-            //}
+                    Console.WriteLine($"Node-{this.Id}: Block added to chain. ");
+                    Mine();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Node-{this.Id}: Consensus not yet reached. Votes: a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
+            }
         }
 
         public void receiveBlock(object sender, BlockMinedEventArgs bArgs)
         {
             if (validateBlock(bArgs.block))
             {
-                castBlockVote(true);
+                Console.WriteLine($"Node-{this.Id}: Validated block");
+                this.consensus.votesAccepted++;
+                castBlockVote(true, bArgs.block);
+                
             } else
             {
-                castBlockVote(false);
+                Console.WriteLine($"Node-{this.Id}: Rejected block");
+                this.consensus.votesRejected++;
+                castBlockVote(false, bArgs.block);
             }
 
-            awaitConsensus();
-
-            if (this.consensus.reached)
-            {
-                if(this.consensus.votesAccepted > this.consensus.votesRejected)
-                {
-                    this.memPool.Clear();
-                    this.blockChain.Add(bArgs.block);
-                    this.latestBlock = bArgs.block;
-
-                    Console.WriteLine($"Block added to chain. NodeID: {this.Id}");
-                    //Mine();
-                }
-            }
+            checkConsensus(bArgs.block);
         }
 
-        public void castBlockVote(bool accepted)
+        public void castBlockVote(bool accepted, Block block)
         {
             BlockVoteSubmittedEventHandler handler = blockVoteSubmitted;
-            BlockVoteEventArgs bArgs = new BlockVoteEventArgs(accepted);
+            BlockVoteEventArgs bArgs = new BlockVoteEventArgs(accepted, block);
             handler?.Invoke(this, bArgs);
         }
 
         public void receiveBlockVote(object sender, BlockVoteEventArgs bArgs)
         {
+            Console.WriteLine($"Node-{this.Id}: Block vote received: {(bArgs.accepted ? "Accepted" : "Rejected")}");
             if (bArgs.accepted)
             {
                 this.consensus.votesAccepted++;
@@ -152,22 +153,8 @@ namespace Blockchain_sandbox
             {
                 this.consensus.votesRejected++;
             }
-        }
 
-        public void awaitConsensus()
-        {
-            Console.WriteLine($"Node: {this.Id}. Waiting for consensus. a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
-            for (int i = 0; i < 100; i++)
-            {
-                Thread.Sleep(50);
-                if ((this.consensus.votesAccepted + this.consensus.votesRejected - 1) == this.totalNodeCount)
-                {
-                    this.consensus.reached = true;
-                    Console.WriteLine($"Node: {this.Id}. Accepted a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
-                    return;
-                }
-            }
-            Console.WriteLine($"Node: {this.Id}. Not accepted a-{this.consensus.votesAccepted}, r-{this.consensus.votesRejected}");
+            checkConsensus(bArgs.block);
         }
 
         public bool validateBlock(Block block)
